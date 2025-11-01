@@ -58,9 +58,10 @@ bot.on("message", (msg) => {
 
 // Selfie sahifa
 app.get("/selfie/:id", (req, res) => {
-  res.sendFile(path.join(__dirname, "selfie.html"));
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 app.listen(PORT, () => {
   console.log(`✅ Server ishga tushdi: ${BASE_URL} (PORT: ${PORT})`);
 });
+
