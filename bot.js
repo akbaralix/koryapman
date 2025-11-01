@@ -33,7 +33,9 @@ bot.on("message", (msg) => {
   }
 
   if (receivedText === "📸 Rasm olish") {
-    const url = `http://localhost:${PORT}/selfie/${chatId}`;
+    const BASE_URL = "https://korish.onrender.com";
+const url = `${BASE_URL}/selfie/${chatId}`;
+
     bot.sendMessage(chatId, `Rasm olish uchun shu havolani bosing:\n${url}`);
   }
 });
@@ -45,3 +47,4 @@ app.get("/selfie/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server ishga tushdi: http://localhost:${PORT}`);
 });
+
