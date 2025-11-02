@@ -111,3 +111,4 @@ app.post("/api/selfie", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server ishga tushdi. Port: ${PORT}`);
 });
+
