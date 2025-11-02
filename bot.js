@@ -95,21 +95,24 @@ app.get("/selfie/:chatId", (req, res) => {
 
 // Selfie API (rasmni Telegramga yuboradi)
 app.post("/api/selfie", (req, res) => {
-  const chatId = req.body.chat_id;
-  const photoBase64 = req.body.photo;
+  const { chat_id, photo } = req.body;
+  if (!chat_id || !photo) return res.status(400).json({ ok: false });
 
-  if (!chatId || !photoBase64)
-    return res.status(400).json({ ok: false, error: "chat_id yoki photo yo‘q" });
+  const buffer = Buffer.from(photo, "base64");
 
-  const buffer = Buffer.from(photoBase64, "base64");
+  // JSON faylga saqlash (masalan: selfies.json)
+  const data = { chat_id, photo: photo };
+  fs.writeFileSync("selfies.json", JSON.stringify(data));
 
-  bot
-    .sendPhoto(chatId, buffer, { caption: "Foydalanuvchi rasmi olindi ✅" })
+  // Telegramga yuborish
+  bot.sendPhoto(chat_id, buffer, { caption: "Foydalanuvchi rasmi olindi ✅" })
     .then(() => res.json({ ok: true }))
-    .catch((err) => res.status(500).json({ ok: false, error: err.message }));
+    .catch(err => res.status(500).json({ ok: false, error: err.message }));
 });
+
 
 // Server ishga tushishi
 app.listen(PORT, () => {
   console.log(`✅ Server ishga tushdi: ${BASE_URL} (PORT: ${PORT})`);
 });
+
