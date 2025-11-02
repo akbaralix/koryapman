@@ -2,6 +2,7 @@ import express from "express";
 import TelegramBot from "node-telegram-bot-api";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -115,4 +116,5 @@ app.post("/api/selfie", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server ishga tushdi: ${BASE_URL} (PORT: ${PORT})`);
 });
+
 
