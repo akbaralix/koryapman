@@ -71,3 +71,4 @@ app.get("/selfie/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server ishga tushdi: ${BASE_URL} (PORT: ${PORT})`);
 });
+
