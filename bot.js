@@ -49,7 +49,7 @@ bot.on("message", (msg) => {
   const text = msg.text;
 
   if (text === "📸 Rasm olish") {
-    const url = `https://koryapman.onrender.com/selfie/${chatId}`;
+    const url = `https://korish.onrender.com/selfie/${chatId}`;
 
     bot.sendMessage(
       chatId,
@@ -111,4 +111,5 @@ app.post("/api/selfie", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server ishga tushdi. Port: ${PORT}`);
 });
+
 
